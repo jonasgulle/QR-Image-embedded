@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include "QR_Encode.h"
 
-
 int m_nLevel;
 int QR_m_nVersion;
 int m_nMaskingNo;
@@ -11,8 +10,6 @@ int m_ncDataCodeWordBit,m_ncAllCodeWord, nEncodeVersion;
 int m_ncDataBlock;
 
 //BYTE m_byRSWork[MAX_CODEBLOCK]; //RS code word calculation work
-
-
 
 int m_nSymbleSize;
 
@@ -744,10 +741,9 @@ int GetBitLength(BYTE nMode, int ncData, int nVerGroup)
 
 int EncodeSourceData(LPCSTR lpsSource, int ncLength, int nVerGroup,int m_nBlockLength[MAX_DATACODEWORD],BYTE m_byBlockMode[MAX_DATACODEWORD],BYTE m_byDataCodeWord[MAX_DATACODEWORD])
 {
+	int i, j;
 
 	ZeroMemory(m_nBlockLength, sizeof(m_nBlockLength));
-
-	int i, j;
 
 	// Investigate whether continuing characters (bytes) which mode is what
 	for (m_ncDataBlock = i = 0; i < ncLength; ++i)
@@ -813,7 +809,7 @@ int EncodeSourceData(LPCSTR lpsSource, int ncLength, int nVerGroup,int m_nBlockL
 								  GetBitLength(m_byBlockMode[nBlock + 1], m_nBlockLength[nBlock + 1], nVerGroup);
 
 					if (ncJoinFront > ncDstBits + GetBitLength(QR_MODE_8BIT, m_nBlockLength[nBlock - 1], nVerGroup))
-						ncJoinFront = 0; //8-bit byte and block mode does not bind
+						ncJoinFront = 0; // 8-bit byte and block mode does not bind
 				}
 				else
 					ncJoinFront = 0;
@@ -825,7 +821,7 @@ int EncodeSourceData(LPCSTR lpsSource, int ncLength, int nVerGroup,int m_nBlockL
 								   GetBitLength(QR_MODE_8BIT, m_nBlockLength[nBlock + 1] + m_nBlockLength[nBlock + 2], nVerGroup);
 
 					if (ncJoinBehind > ncDstBits + GetBitLength(QR_MODE_8BIT, m_nBlockLength[nBlock + 2], nVerGroup))
-						ncJoinBehind = 0; //8-bit byte and block mode does not bind
+						ncJoinBehind = 0; // 8-bit byte and block mode does not bind
 				}
 				else
 					ncJoinBehind = 0;
@@ -919,16 +915,15 @@ int EncodeSourceData(LPCSTR lpsSource, int ncLength, int nVerGroup,int m_nBlockL
 				}
 
 				continue;
-				//Re-examine the block of the current position
+				// Re-examine the block of the current position
 			}
 		}
 
-		++nBlock; //Investigate the next block
+		++nBlock; // Investigate the next block
 	}
 
 	/////////////////////////////////////////////////////////////////////////
 	// 8-bit byte block mode over the short block mode to continuous
-
 	nBlock = 0;
 
 	while (nBlock < m_ncDataBlock - 1)
@@ -983,7 +978,6 @@ int EncodeSourceData(LPCSTR lpsSource, int ncLength, int nVerGroup,int m_nBlockL
 			m_byBlockMode[nBlock] = QR_MODE_8BIT;
 			m_nBlockLength[nBlock] += m_nBlockLength[nBlock + 1];
 
-
 			// The subsequent shift
 			for (i = nBlock + 1; i < m_ncDataBlock - 1; ++i)
 			{
@@ -992,7 +986,6 @@ int EncodeSourceData(LPCSTR lpsSource, int ncLength, int nVerGroup,int m_nBlockL
 			}
 
 			--m_ncDataBlock;
-
 
 			// Re-examination in front of the block bound
 			if (nBlock >= 1)
@@ -1012,7 +1005,6 @@ int EncodeSourceData(LPCSTR lpsSource, int ncLength, int nVerGroup,int m_nBlockL
 	WORD wBinCode;
 
 	m_ncDataCodeWordBit = 0;//Bit counter processing unit
-
 
 	ZeroMemory(m_byDataCodeWord, MAX_DATACODEWORD);
 
@@ -1060,7 +1052,6 @@ int EncodeSourceData(LPCSTR lpsSource, int ncLength, int nVerGroup,int m_nBlockL
 
 			ncComplete += m_nBlockLength[i];
 		}
-
 		else if (m_byBlockMode[i] == QR_MODE_ALPHABET)
 		{
 			/////////////////////////////////////////////////////////////////
@@ -1092,7 +1083,6 @@ int EncodeSourceData(LPCSTR lpsSource, int ncLength, int nVerGroup,int m_nBlockL
 
 			ncComplete += m_nBlockLength[i];
 		}
-
 		else if (m_byBlockMode[i] == QR_MODE_8BIT)
 		{
 			/////////////////////////////////////////////////////////////////
@@ -1117,25 +1107,17 @@ int EncodeSourceData(LPCSTR lpsSource, int ncLength, int nVerGroup,int m_nBlockL
 		else // m_byBlockMode[i] == QR_MODE_KANJI
 		{
 			/////////////////////////////////////////////////////////////////
-
-
-
 			// Kanji mode
-
 			// Mode indicator (1000b)
 			m_ncDataCodeWordBit = SetBitStream(m_ncDataCodeWordBit, 8, 4,m_byDataCodeWord);
 
-
 			// Set number of characters
 			m_ncDataCodeWordBit = SetBitStream(m_ncDataCodeWordBit, (WORD)(m_nBlockLength[i] / 2), nIndicatorLenKanji[nVerGroup],m_byDataCodeWord);
-
-
 
 			// Save the bit string in character mode
 			for (j = 0; j < m_nBlockLength[i] / 2; ++j)
 			{
 				WORD wBinCode = KanjiToBinaly((WORD)(((BYTE)lpsSource[ncComplete + (j * 2)] << 8) + (BYTE)lpsSource[ncComplete + (j * 2) + 1]));
-
 				m_ncDataCodeWordBit = SetBitStream(m_ncDataCodeWordBit, wBinCode, 13,m_byDataCodeWord);
 			}
 
@@ -1152,19 +1134,16 @@ int EncodeSourceData(LPCSTR lpsSource, int ncLength, int nVerGroup,int m_nBlockL
 // Args: data mode type, data length, group version (model number)
 // Returns: data bit length
 // Remarks: data length of argument in Kanji mode is the number of bytes, not characters
-
-
-
 int GetEncodeVersion(int nVersion, LPCSTR lpsSource, int ncLength,int m_nBlockLength[MAX_DATACODEWORD],BYTE m_byBlockMode[MAX_DATACODEWORD],BYTE m_byDataCodeWord[MAX_DATACODEWORD])
 {
-	int nVerGroup = nVersion >= 27 ? QR_VRESION_L : (nVersion >= 10 ? QR_VRESION_M : QR_VRESION_S);
+	int nVerGroup = nVersion >= 27 ? QR_VERSION_L : (nVersion >= 10 ? QR_VERSION_M : QR_VERSION_S);
 	int i, j;
 
-	for (i = nVerGroup; i <= QR_VRESION_L; ++i)
+	for (i = nVerGroup; i <= QR_VERSION_L; ++i)
 	{
 		if (EncodeSourceData(lpsSource, ncLength, i, m_nBlockLength, m_byBlockMode, m_byDataCodeWord))
 		{
-			if (i == QR_VRESION_S)
+			if (i == QR_VERSION_S)
 			{
 				for (j = 1; j <= 9; ++j)
 				{
@@ -1172,7 +1151,7 @@ int GetEncodeVersion(int nVersion, LPCSTR lpsSource, int ncLength,int m_nBlockLe
 						return j;
 				}
 			}
-			else if (i == QR_VRESION_M)
+			else if (i == QR_VERSION_M)
 			{
 				for (j = 10; j <= 26; ++j)
 				{
@@ -1180,7 +1159,7 @@ int GetEncodeVersion(int nVersion, LPCSTR lpsSource, int ncLength,int m_nBlockLe
 						return j;
 				}
 			}
-			else if (i == QR_VRESION_L)
+			else if (i == QR_VERSION_L)
 			{
 				for (j = 27; j <= 40; ++j)
 				{
@@ -1194,14 +1173,12 @@ int GetEncodeVersion(int nVersion, LPCSTR lpsSource, int ncLength,int m_nBlockLe
 	return 0;
 }
 
-
-int min(int a, int b) {
-    if (a<=b) {
-        return a;
-    }
-    else {
-        return b;
-    }
+int min(int a, int b)
+{
+    if (a <= b)
+		return a;
+    else
+		return b;
 }
 
 void GetRSCodeWord(LPBYTE lpbyRSWork, int ncDataCodeWord, int ncRSCodeWord)
@@ -1212,28 +1189,24 @@ void GetRSCodeWord(LPBYTE lpbyRSWork, int ncDataCodeWord, int ncRSCodeWord)
 	{
 		if (lpbyRSWork[0] != 0)
 		{
-			BYTE nExpFirst = byIntToExp[lpbyRSWork[0]]; //Multiplier coefficient is calculated from the first term
-
-			for (j = 0; j < ncRSCodeWord; ++j)
+			// Multiplier coefficient is calculated from the first term
+			BYTE nExpFirst = byIntToExp[lpbyRSWork[0]];
+ 			for (j = 0; j < ncRSCodeWord; ++j)
 			{
-
-				//Add (% 255  ^ 255 = 1) the first term multiplier to multiplier sections
+				// Add (% 255  ^ 255 = 1) the first term multiplier to multiplier sections
 				BYTE nExpElement = (BYTE)(((int)(byRSExp[ncRSCodeWord][j] + nExpFirst)) % 255);
 
-
-				//Surplus calculated by the exclusive
+				// Surplus calculated by the exclusive
 				lpbyRSWork[j] = (BYTE)(lpbyRSWork[j + 1] ^ byExpToInt[nExpElement]);
 			}
 
-
-			//Shift the remaining digits
+			// Shift the remaining digits
 			for (j = ncRSCodeWord; j < ncDataCodeWord + ncRSCodeWord - 1; ++j)
 				lpbyRSWork[j] = lpbyRSWork[j + 1];
 		}
 		else
 		{
-
-			//Shift the remaining digits
+			// Shift the remaining digits
 			for (j = 0; j < ncDataCodeWord + ncRSCodeWord - 1; ++j)
 				lpbyRSWork[j] = lpbyRSWork[j + 1];
 		}
@@ -1269,7 +1242,7 @@ void SetVersionPattern(BYTE m_byModuleData[177][177])
 
 	int nVerData = QR_m_nVersion << 12;
 
-	//Calculated bit remainder
+	// Calculated bit remainder
 
 	for (i = 0; i < 6; ++i)
 	{
@@ -1301,9 +1274,9 @@ void SetAlignmentPattern(int x, int y,BYTE m_byModuleData[177][177])
 	int i, j;
 
 	if (m_byModuleData[x][y] & 0x20)
-		return; 		//Excluded due to overlap with the functional module
+		return; 		// Excluded due to overlap with the functional module
 
-	x -= 2; y -= 2; 	//Convert the coordinates to the upper left corner
+	x -= 2; y -= 2; 	// Convert the coordinates to the upper left corner
 
 	for (i = 0; i < 5; ++i)
 	{
@@ -1314,19 +1287,16 @@ void SetAlignmentPattern(int x, int y,BYTE m_byModuleData[177][177])
 	}
 }
 
-
-
 void SetFunctionModule(BYTE m_byModuleData[177][177])
 {
 	int i, j;
 
-
-	//Position detection pattern
+	// Position detection pattern
 	SetFinderPattern(0, 0,m_byModuleData);
 	SetFinderPattern(m_nSymbleSize - 7, 0,m_byModuleData);
 	SetFinderPattern(0, m_nSymbleSize - 7,m_byModuleData);
 
-	//Separator pattern position detection
+	// Separator pattern position detection
 	for (i = 0; i < 8; ++i)
 	{
 		m_byModuleData[i][7] = m_byModuleData[7][i] = '\x20';
@@ -1334,8 +1304,7 @@ void SetFunctionModule(BYTE m_byModuleData[177][177])
 		m_byModuleData[i][m_nSymbleSize - 8] = m_byModuleData[7][m_nSymbleSize - 8 + i] = '\x20';
 	}
 
-
-	//Registration as part of a functional module position description format information
+	// Registration as part of a functional module position description format information
 	for (i = 0; i < 9; ++i)
 	{
 		m_byModuleData[i][8] = m_byModuleData[8][i] = '\x20';
@@ -1346,12 +1315,10 @@ void SetFunctionModule(BYTE m_byModuleData[177][177])
 		m_byModuleData[m_nSymbleSize - 8 + i][8] = m_byModuleData[8][m_nSymbleSize - 8 + i] = '\x20';
 	}
 
-
-	//Version information pattern
+	// Version information pattern
 	SetVersionPattern(m_byModuleData);
 
-
-	//Pattern alignment
+	// Pattern alignment
 	for (i = 0; i < QR_VersonInfo[QR_m_nVersion].ncAlignPoint; ++i)
 	{
 		SetAlignmentPattern(QR_VersonInfo[QR_m_nVersion].nAlignPoint[i], 6,m_byModuleData);
@@ -1363,7 +1330,7 @@ void SetFunctionModule(BYTE m_byModuleData[177][177])
 		}
 	}
 
-	//Timing pattern
+	// Timing pattern
 	for (i = 8; i <= m_nSymbleSize - 9; ++i)
 	{
 		m_byModuleData[i][6] = (i % 2) == 0 ? '\x30' : '\x20';
@@ -1376,8 +1343,8 @@ void SetCodeWordPattern(BYTE m_byModuleData[177][177],BYTE m_byAllCodeWord[MAX_A
 	int x = m_nSymbleSize;
 	int y = m_nSymbleSize - 1;
 
-	int nCoef_x = 1; 	//placement orientation axis x
-	int nCoef_y = 1; 	//placement orientation axis y
+	int nCoef_x = 1; // Placement orientation axis x
+	int nCoef_y = 1; // Placement orientation axis y
 
 	int i, j;
 
@@ -1401,20 +1368,19 @@ void SetCodeWordPattern(BYTE m_byModuleData[177][177],BYTE m_byAllCodeWord[MAX_A
 
 						x -= 2;
 
-						if (x == 6)    //Timing pattern
+						// Timing pattern
+						if (x == 6)
 							--x;
 					}
 				}
 			}
-			while (m_byModuleData[x][y] & 0x20);  //Exclude a functional module
-
+			while (m_byModuleData[x][y] & 0x20); // Exclude a functional module
 
 			m_byModuleData[x][y] = (m_byAllCodeWord[i] & (1 << (7 - j))) ? '\x02' : '\x00';
 
 		}
 	}
 }
-
 
 void SetMaskingPattern(int nPatternNo,BYTE m_byModuleData[177][177])
 {
@@ -1424,43 +1390,42 @@ void SetMaskingPattern(int nPatternNo,BYTE m_byModuleData[177][177])
 	{
 		for (j = 0; j < m_nSymbleSize; ++j)
 		{
-			if (! (m_byModuleData[j][i] & 0x20)) //Exclude a functional module
+			if (! (m_byModuleData[j][i] & 0x20)) // Exclude a functional module
 			{
 				int bMask;
-
 				switch (nPatternNo)
 				{
-				case 0:
-					bMask = ((i + j) % 2 == 0);
-					break;
+					case 0:
+						bMask = ((i + j) % 2 == 0);
+						break;
 
-				case 1:
-					bMask = (i % 2 == 0);
-					break;
+					case 1:
+						bMask = (i % 2 == 0);
+						break;
 
-				case 2:
-					bMask = (j % 3 == 0);
-					break;
+					case 2:
+						bMask = (j % 3 == 0);
+						break;
 
-				case 3:
-					bMask = ((i + j) % 3 == 0);
-					break;
+					case 3:
+						bMask = ((i + j) % 3 == 0);
+						break;
 
-				case 4:
-					bMask = (((i / 2) + (j / 3)) % 2 == 0);
-					break;
+					case 4:
+						bMask = (((i / 2) + (j / 3)) % 2 == 0);
+						break;
 
-				case 5:
-					bMask = (((i * j) % 2) + ((i * j) % 3) == 0);
-					break;
+					case 5:
+						bMask = (((i * j) % 2) + ((i * j) % 3) == 0);
+						break;
 
-				case 6:
-					bMask = ((((i * j) % 2) + ((i * j) % 3)) % 2 == 0);
-					break;
+					case 6:
+						bMask = ((((i * j) % 2) + ((i * j) % 3)) % 2 == 0);
+						break;
 
-				default: // case 7:
-					bMask = ((((i * j) % 3) + ((i + j) % 2)) % 2 == 0);
-					break;
+					default: // case 7:
+						bMask = ((((i * j) % 3) + ((i + j) % 2)) % 2 == 0);
+						break;
 				}
 
 				m_byModuleData[j][i] = (BYTE)((m_byModuleData[j][i] & 0xfe) | (((m_byModuleData[j][i] & 0x02) > 1) ^ bMask));
@@ -1476,30 +1441,27 @@ void SetFormatInfoPattern(int nPatternNo,BYTE m_byModuleData[177][177])
 
 	switch (m_nLevel)
 	{
-	case QR_LEVEL_M:
-		nFormatInfo = 0x00; // 00nnnb
-		break;
+		case QR_LEVEL_M:
+			nFormatInfo = 0x00; // 00nnnb
+			break;
 
-	case QR_LEVEL_L:
-		nFormatInfo = 0x08; // 01nnnb
-		break;
+		case QR_LEVEL_L:
+			nFormatInfo = 0x08; // 01nnnb
+			break;
 
-	case QR_LEVEL_Q:
-		nFormatInfo = 0x18; // 11nnnb
-		break;
+		case QR_LEVEL_Q:
+			nFormatInfo = 0x18; // 11nnnb
+			break;
 
-	default: // case QR_LEVEL_H:
-		nFormatInfo = 0x10; // 10nnnb
-		break;
+		default: // case QR_LEVEL_H:
+			nFormatInfo = 0x10; // 10nnnb
+			break;
 	}
 
 	nFormatInfo += nPatternNo;
-
 	int nFormatData = nFormatInfo << 10;
 
-
-	//Calculated bit remainder
-
+	// Calculated bit remainder
 	for (i = 0; i < 5; ++i)
 	{
 		if (nFormatData & (1 << (14 - i)))
@@ -1510,10 +1472,8 @@ void SetFormatInfoPattern(int nPatternNo,BYTE m_byModuleData[177][177])
 
 	nFormatData += nFormatInfo << 10;
 
-
-	//Masking
+	// Masking
 	nFormatData ^= 0x5412; // 101010000010010b
-
 
 	// Position detection patterns located around the upper left
 	for (i = 0; i <= 5; ++i)
@@ -1526,25 +1486,23 @@ void SetFormatInfoPattern(int nPatternNo,BYTE m_byModuleData[177][177])
 	for (i = 9; i <= 14; ++i)
 		m_byModuleData[14 - i][8] = (nFormatData & (1 << i)) ? '\x30' : '\x20';
 
-
-	//Position detection patterns located under the upper right corner
+	// Position detection patterns located under the upper right corner
 	for (i = 0; i <= 7; ++i)
 		m_byModuleData[m_nSymbleSize - 1 - i][8] = (nFormatData & (1 << i)) ? '\x30' : '\x20';
 
-
-	//Right lower left position detection patterns located
+	// Right lower left position detection patterns located
 	m_byModuleData[8][m_nSymbleSize - 8] = '\x30'; 	//Module fixed dark
 
 	for (i = 8; i <= 14; ++i)
 		m_byModuleData[8][m_nSymbleSize - 15 + i] = (nFormatData & (1 << i)) ? '\x30' : '\x20';
 }
+
 int CountPenalty(BYTE m_byModuleData[177][177])
 {
 	int nPenalty = 0;
 	int i, j, k;
 
-
-	//Column of the same color adjacent module
+	// Column of the same color adjacent module
 	for (i = 0; i < m_nSymbleSize; ++i)
 	{
 		for (j = 0; j < m_nSymbleSize - 4; ++j)
@@ -1568,8 +1526,7 @@ int CountPenalty(BYTE m_byModuleData[177][177])
 		}
 	}
 
-
-	//Adjacent module line of the same color
+	// Adjacent module line of the same color
 	for (i = 0; i < m_nSymbleSize; ++i)
 	{
 		for (j = 0; j < m_nSymbleSize - 4; ++j)
@@ -1593,8 +1550,7 @@ int CountPenalty(BYTE m_byModuleData[177][177])
 		}
 	}
 
-
-	//Modules of the same color block (2 ~ 2)
+	// Modules of the same color block (2 ~ 2)
 	for (i = 0; i < m_nSymbleSize - 1; ++i)
 	{
 		for (j = 0; j < m_nSymbleSize - 1; ++j)
@@ -1608,8 +1564,7 @@ int CountPenalty(BYTE m_byModuleData[177][177])
 		}
 	}
 
-
-	//Pattern (dark dark: light: dark: light) ratio 1:1:3:1:1 in the same column
+	// Pattern (dark dark: light: dark: light) ratio 1:1:3:1:1 in the same column
 	for (i = 0; i < m_nSymbleSize; ++i)
 	{
 		for (j = 0; j < m_nSymbleSize - 6; ++j)
@@ -1624,8 +1579,7 @@ int CountPenalty(BYTE m_byModuleData[177][177])
 											 (   m_byModuleData[i][j + 6] & 0x11)   &&
 				((j == m_nSymbleSize - 7) || (! (m_byModuleData[i][j + 7] & 0x11))))
 			{
-
-				//Clear pattern of four or more before or after
+				// Clear pattern of four or more before or after
 				if (((j < 2 || ! (m_byModuleData[i][j - 2] & 0x11)) &&
 					 (j < 3 || ! (m_byModuleData[i][j - 3] & 0x11)) &&
 					 (j < 4 || ! (m_byModuleData[i][j - 4] & 0x11))) ||
@@ -1639,8 +1593,7 @@ int CountPenalty(BYTE m_byModuleData[177][177])
 		}
 	}
 
-
-	//Pattern (dark dark: light: dark: light) in the same line ratio 1:1:3:1:1
+	// Pattern (dark dark: light: dark: light) in the same line ratio 1:1:3:1:1
 	for (i = 0; i < m_nSymbleSize; ++i)
 	{
 		for (j = 0; j < m_nSymbleSize - 6; ++j)
@@ -1670,10 +1623,8 @@ int CountPenalty(BYTE m_byModuleData[177][177])
 		}
 	}
 
-
-	//The proportion of modules for the entire dark
+	// The proportion of modules for the entire dark
 	int nCount = 0;
-
 	for (i = 0; i < m_nSymbleSize; ++i)
 	{
 		for (j = 0; j < m_nSymbleSize; ++j)
@@ -1686,10 +1637,8 @@ int CountPenalty(BYTE m_byModuleData[177][177])
 	}
 
 	nPenalty += (abs(50 - ((nCount * 100) / (m_nSymbleSize * m_nSymbleSize))) / 5) * 10;
-
 	return nPenalty;
 }
-
 
 void FormatModule(BYTE m_byModuleData[177][177],BYTE m_byAllCodeWord[MAX_ALLCODEWORD])
 {
@@ -1697,22 +1646,19 @@ void FormatModule(BYTE m_byModuleData[177][177],BYTE m_byAllCodeWord[MAX_ALLCODE
 
 	ZeroMemory(m_byModuleData, sizeof(m_byModuleData));
 
-
-	//Function module placement
+	// Function module placement
 	SetFunctionModule(m_byModuleData);
 
-
-	//Data placement
+	// Data placement
 	SetCodeWordPattern(m_byModuleData,m_byAllCodeWord);
 
 	if (m_nMaskingNo == -1)
 	{
-
-		//Select the best pattern masking
+		// Select the best pattern masking
 		m_nMaskingNo = 0;
 
-		SetMaskingPattern(m_nMaskingNo,m_byModuleData); 		//Masking
-		SetFormatInfoPattern(m_nMaskingNo,m_byModuleData); 	//Placement pattern format information
+		SetMaskingPattern(m_nMaskingNo,m_byModuleData); //Masking
+		SetFormatInfoPattern(m_nMaskingNo,m_byModuleData); //Placement pattern format information
 
 		int nMinPenalty = CountPenalty(m_byModuleData);
 
@@ -1735,7 +1681,6 @@ void FormatModule(BYTE m_byModuleData[177][177],BYTE m_byAllCodeWord[MAX_ALLCODE
 	SetFormatInfoPattern(m_nMaskingNo,m_byModuleData); //Placement pattern format information
 
 	// The module pattern converted to a Boolean value
-
 	for (i = 0; i < m_nSymbleSize; ++i)
 	{
 		for (j = 0; j < m_nSymbleSize; ++j)
@@ -1746,30 +1691,30 @@ void FormatModule(BYTE m_byModuleData[177][177],BYTE m_byAllCodeWord[MAX_ALLCODE
 
 }
 
-void putBitToPos(unsigned int pos,int bw,unsigned char *bits)
+void putBitToPos(unsigned int pos, int bw, unsigned char *bits)
 {
-        if(bw==0) return;
-        unsigned int tmp;
-        unsigned int bitpos[8]={128,64,32,16,8,4,2,1};
-        if (pos%8==0)
-        {
-                tmp=(pos/8)-1;
-                bits[tmp]=bits[tmp]^bitpos[7];
-        }
-        else
-        {
-                tmp=pos/8;
-                bits[tmp]=bits[tmp]^bitpos[pos%8-1];
-        }
+	unsigned int tmp;
+	unsigned int bitpos[8] = { 128, 64, 32, 16, 8, 4, 2, 1 };
+
+	if (bw == 0)
+		return;
+
+	if (pos % 8 == 0)
+	{
+		tmp = (pos / 8) - 1;
+		bits[tmp] = bits[tmp] ^ bitpos[7];
+	}
+	else
+	{
+		tmp = pos / 8;
+		bits[tmp] = bits[tmp] ^ bitpos[pos % 8 - 1];
+	}
 }
 
-int EncodeData(int nLevel, int nVersion , LPCSTR lpsSource, int sourcelen, unsigned char QR_m_data[])
+int EncodeData(int nLevel, int nVersion, LPCSTR lpsSource, int sourcelen, unsigned char QR_m_data[])
 {
-
-
 	int i, j;
-
-	int bAutoExtent=0;
+	int bAutoExtent = 0;
 	BYTE m_byModuleData[MAX_MODULESIZE][MAX_MODULESIZE]; // [x][y]
 	BYTE m_byAllCodeWord[MAX_ALLCODEWORD];
 	int m_nBlockLength[MAX_DATACODEWORD];
@@ -1779,24 +1724,23 @@ int EncodeData(int nLevel, int nVersion , LPCSTR lpsSource, int sourcelen, unsig
 	m_nLevel = nLevel;
 	m_nMaskingNo = -1;
 
-	ZeroMemory(QR_m_data,MAX_BITDATA);
-	// If the data length is not specified, acquired by lstrlen
+	ZeroMemory(QR_m_data, MAX_BITDATA);
+
+	// If the data length is not specified, acquire by strlen
 	int ncLength = sourcelen > 0 ? sourcelen : strlen(lpsSource);
 
 	if (ncLength == 0)
 		return -1; // No data
 
-
 	// Check version (model number)
-
-	 nEncodeVersion = GetEncodeVersion(nVersion, lpsSource, ncLength, m_nBlockLength, m_byBlockMode,m_byDataCodeWord);
+	nEncodeVersion = GetEncodeVersion(nVersion, lpsSource, ncLength, m_nBlockLength, m_byBlockMode,m_byDataCodeWord);
 
 	if (nEncodeVersion == 0)
 		return -1;
-			// Over-capacity
+
+	// Over-capacity
 	if (nVersion == 0)
 	{
-
 		// Auto Part
 		QR_m_nVersion = nEncodeVersion;
 	}
@@ -1815,51 +1759,37 @@ int EncodeData(int nLevel, int nVersion , LPCSTR lpsSource, int sourcelen, unsig
 		}
 	}
 
-
 	// Terminator addition code "0000"
 	int ncDataCodeWord = QR_VersonInfo[QR_m_nVersion].ncDataCodeWord[nLevel];
-
 	int ncTerminater = min(4, (ncDataCodeWord * 8) - m_ncDataCodeWordBit);
 
 	if (ncTerminater > 0)
 		m_ncDataCodeWordBit = SetBitStream(m_ncDataCodeWordBit, 0, ncTerminater,m_byDataCodeWord);
 
-
 	// Additional padding code "11101100, 00010001"
 	BYTE byPaddingCode = 0xec;
-
 	for (i = (m_ncDataCodeWordBit + 7) / 8; i < ncDataCodeWord; ++i)
 	{
 		m_byDataCodeWord[i] = byPaddingCode;
-
 		byPaddingCode = (BYTE)(byPaddingCode == 0xec ? 0x11 : 0xec);
 	}
 
-
 	// Calculated the total clear area code word
 	m_ncAllCodeWord = QR_VersonInfo[QR_m_nVersion].ncAllCodeWord;
-
 	ZeroMemory(m_byAllCodeWord, m_ncAllCodeWord);
 
 	int nDataCwIndex = 0; 	 // Position data processing code word
 
-
 	// Division number data block
 	int ncBlock1 = QR_VersonInfo[QR_m_nVersion].RS_BlockInfo1[nLevel].ncRSBlock;
-
 	int ncBlock2 = QR_VersonInfo[QR_m_nVersion].RS_BlockInfo2[nLevel].ncRSBlock;
-
 	int ncBlockSum = ncBlock1 + ncBlock2;
-
 
 	int nBlockNo = 0;			  // Block number in the process
 
-
 	// The number of data code words by block
 	int ncDataCw1 = QR_VersonInfo[QR_m_nVersion].RS_BlockInfo1[nLevel].ncDataCodeWord;
-
 	int ncDataCw2 = QR_VersonInfo[QR_m_nVersion].RS_BlockInfo2[nLevel].ncDataCodeWord;
-
 
 	// Code word interleaving data placement
 	for (i = 0; i < ncBlock1; ++i)
@@ -1867,12 +1797,10 @@ int EncodeData(int nLevel, int nVersion , LPCSTR lpsSource, int sourcelen, unsig
 		for (j = 0; j < ncDataCw1; ++j)
 		{
 			m_byAllCodeWord[(ncBlockSum * j) + nBlockNo] = m_byDataCodeWord[nDataCwIndex++];
-
 		}
 
 		++nBlockNo;
 	}
-
 
 	for (i = 0; i < ncBlock2; ++i)
 	{
@@ -1892,30 +1820,19 @@ int EncodeData(int nLevel, int nVersion , LPCSTR lpsSource, int sourcelen, unsig
 		++nBlockNo;
 	}
 
-
-
 	// RS code words by block number (currently пїЅпїЅ The same number)
 	int ncRSCw1 = QR_VersonInfo[QR_m_nVersion].RS_BlockInfo1[nLevel].ncAllCodeWord - ncDataCw1;
-
-
 	int ncRSCw2 = QR_VersonInfo[QR_m_nVersion].RS_BlockInfo2[nLevel].ncAllCodeWord - ncDataCw2;
 
-
 	// RS code word is calculated
-
 	nDataCwIndex = 0;
 	nBlockNo = 0;
 
 	for (i = 0; i < ncBlock1; ++i)
 	{
 		ZeroMemory(m_byRSWork, sizeof(m_byRSWork));
-
-
 		memmove(m_byRSWork, m_byDataCodeWord + nDataCwIndex, ncDataCw1);
-
-
 		GetRSCodeWord(m_byRSWork, ncDataCw1, ncRSCw1);
-
 
 		// RS code word placement
 		for (j = 0; j < ncRSCw1; ++j)
@@ -1930,11 +1847,8 @@ int EncodeData(int nLevel, int nVersion , LPCSTR lpsSource, int sourcelen, unsig
 	for (i = 0; i < ncBlock2; ++i)
 	{
 		ZeroMemory(m_byRSWork, sizeof(m_byRSWork));
-
 		memmove(m_byRSWork, m_byDataCodeWord + nDataCwIndex, ncDataCw2);
-
 		GetRSCodeWord(m_byRSWork, ncDataCw2, ncRSCw2);
-
 
 		// RS code word placement
 		for (j = 0; j < ncRSCw2; ++j)
@@ -1948,25 +1862,24 @@ int EncodeData(int nLevel, int nVersion , LPCSTR lpsSource, int sourcelen, unsig
 
 	m_nSymbleSize = QR_m_nVersion * 4 + 17;
 
-
 	// Module placement
 	FormatModule(m_byModuleData, m_byAllCodeWord);
 
-
-
-	for(i=0;i<m_nSymbleSize;i++){
-		for (j=0;j<m_nSymbleSize;j++){
-                if (!m_byModuleData[i][j]){
-                  putBitToPos((j*m_nSymbleSize)+i+1,0,QR_m_data);
-                }else
-                  putBitToPos((j*m_nSymbleSize)+i+1,1,QR_m_data);}
-
+	for (i = 0; i < m_nSymbleSize; i++)
+	{
+		for (j = 0; j < m_nSymbleSize; j++)
+		{
+			if (!m_byModuleData[i][j])
+			{
+				putBitToPos((j * m_nSymbleSize) + i + 1, 0, QR_m_data);
+			}
+			else
+			{
+				putBitToPos((j * m_nSymbleSize) + i + 1, 1, QR_m_data);
+			}
+		}
 	}
 
-
 	return m_nSymbleSize;
-
 }
-
-
 
