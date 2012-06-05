@@ -1,3 +1,5 @@
 a.out
 file.tmp
 *.swp
+*.o
+qrencode
